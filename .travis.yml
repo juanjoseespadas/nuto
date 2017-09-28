@@ -17,13 +17,13 @@ env:
   global:
     - COVERAGE=FALSE
     - BUILD_DIR="$TRAVIS_BUILD_DIR/build"
-    - CMAKE_FLAGS="-DENABLE_OPENMP=FALSE -DENABLE_COVERAGE=FALSE EXAMPLES=TRUE -DENABLE_METAMODEL=TRUE -DENABLE_OPTIMIZE=TRUE -DENABLE_ARPACK=TRUE -DENABLE_GEOMETRYCONCRETE=TRUE -DENABLE_MPI=TRUE"
+    - CMAKE_FLAGS="-DENABLE_OPENMP=TRUE -DENABLE_COVERAGE=FALSE -DENABLE_EXAMPLES=TRUE -DENABLE_METAMODEL=TRUE -DENABLE_OPTIMIZE=TRUE -DENABLE_ARPACK=TRUE -DENABLE_GEOMETRYCONCRETE=TRUE -DENABLE_MPI=TRUE"
 
 jobs:
   include:
       # test stage
     - stage: Test
-    - compiler: clang++
+      compiler: clang++
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release"
     - compiler: g++
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=TRUE"
@@ -54,5 +54,5 @@ addons:
       - llvm-toolchain-trusty-4.0
     packages:
       - build-essential
-      - clang
+      - clang++-4.0
       - g++-6
