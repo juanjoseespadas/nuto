@@ -7,7 +7,6 @@ if [[ "${CI_TARGET}" == lint ]]; then
   exit
 fi
 
-
 export PATH=/home/travis/miniconda/bin:$PATH
 ./scripts/install_numpy.sh
 ./scripts/install_gmsh.sh
