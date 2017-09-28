@@ -23,13 +23,13 @@ jobs:
   include:
       # test stage
     - stage: Test
-      compiler: clang++
+      compiler: clang++-4.0
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=TRUE"
-    - compiler: g++
+    - compiler: g++-6
       env: CI_TARGET=test CXX=g++-6 CMAKE_FLAGS="${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=TRUE"
-    - compiler: g++
+    - compiler: g++-6
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Debug"
-    - compiler: g++
+    - compiler: g++-6
       env: CI_TARGET=test COVERAGE=TRUE CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=TRUE"
       # lint
     - env: CI_TARGET=lint
