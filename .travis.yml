@@ -37,8 +37,6 @@ jobs:
     - env: CI_TARGET=lint
   fast_finish: true
 
-before_install: eval ${CXX}
-
 install: ci/install.sh
 
 before_script: ci/before_script.sh
