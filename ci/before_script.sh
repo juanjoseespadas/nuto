@@ -9,4 +9,5 @@ fi
 
 mkdir "${BUILD_DIR}"
 cd "${BUILD_DIR}"
+echo "${CMAKE_FLAGS}"
 cmake "${CMAKE_FLAGS}" ..

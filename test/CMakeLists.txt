@@ -11,6 +11,6 @@ if(ENABLE_VISUALIZE)
 endif()
 
 add_custom_target(unit
-    COMMAND ctest -R unit
+    COMMAND ctest -R unit --output-on-failure
     DEPENDS ${all_unit_tests}
     )

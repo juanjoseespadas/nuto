@@ -26,7 +26,7 @@ jobs:
       compiler: clang++
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=TRUE"
     - compiler: g++
-      env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=TRUE"
+      env: CI_TARGET=test CXX=g++-6 CMAKE_FLAGS="${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=TRUE"
     - compiler: g++
       env: CI_TARGET=test CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Debug"
     - compiler: g++
@@ -36,6 +36,8 @@ jobs:
   allow_failures:
     - env: CI_TARGET=lint
   fast_finish: true
+
+before_install: eval ${CXX}
 
 install: ci/install.sh
 
