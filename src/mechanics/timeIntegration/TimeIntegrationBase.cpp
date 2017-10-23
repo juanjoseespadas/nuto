@@ -47,10 +47,6 @@ const NuTo::BlockScalar& NuTo::TimeIntegrationBase::GetToleranceResidual() const
     return mToleranceResidual;
 }
 
-void NuTo::TimeIntegrationBase::UpdateConstraints(double rCurrentTime)
-{
-    mStructure->GetAssembler().ConstraintUpdateRhs(rCurrentTime);
-}
 
 void NuTo::TimeIntegrationBase::SetTimeDependentLoadCase(int rTimeDependentLoadCase,
                                                          const Eigen::MatrixXd& rTimeDependentLoadFactor)
@@ -129,23 +125,17 @@ NuTo::StructureOutputBlockVector NuTo::TimeIntegrationBase::CalculateCurrentExte
     }
 }
 
-const NuTo::BlockFullVector<double>& NuTo::TimeIntegrationBase::UpdateAndGetConstraintRHS(double rCurrentTime)
+const NuTo::BlockFullVector<double>& NuTo::TimeIntegrationBase::GetConstraintRhs(double rCurrentTime)
 {
-    UpdateConstraints(rCurrentTime);
-    return mStructure->GetAssembler().GetConstraintRhs();
+    return mStructure->GetAssembler().GetConstraintRhs(rCurrentTime);
 }
 
-const NuTo::BlockFullVector<double>&
-NuTo::TimeIntegrationBase::UpdateAndGetAndMergeConstraintRHS(double rCurrentTime, StructureOutputBlockVector& rDof_dt0)
+void NuTo::TimeIntegrationBase::MergeDofValues(const StructureOutputBlockVector& rDof_dt0)
 {
-    UpdateConstraints(rCurrentTime);
 
-
-    rDof_dt0.K = mStructure->NodeCalculateDependentDofValues(rDof_dt0.J);
     mStructure->NodeMergeDofValues(0, rDof_dt0);
 
     mStructure->ElementTotalUpdateTmpStaticData();
-    return mStructure->GetAssembler().GetConstraintRhs();
 }
 
 

@@ -14,6 +14,12 @@ class Constraints
     typedef std::vector<Equation> Equations;
 
 public:
+    //!@brief gets the specified equation
+    //! @param dof ... doftype of the equation
+    //! @param equationNumber ... number of the equation
+    //! @return selected equation
+    const Equations& GetEquation(Node::eDof dof, int equationNumber);
+
     //! @brief adds an equation
     //! @param dof dof type
     //! @param equation constraint equation

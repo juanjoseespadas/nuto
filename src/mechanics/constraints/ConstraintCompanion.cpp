@@ -24,7 +24,7 @@ std::vector<Equation> Component(const NodeBase& node, std::vector<eDirection> di
             // if you try to constrain the Z component of the temperature. Which would be wrong.
             throw Exception(__PRETTY_FUNCTION__, "Dimension mismatch");
 
-        eqs.push_back(Equation({Term(node, component, 1)}, rhs));
+        eqs.push_back(Equation(node, component, rhs));
     }
     return eqs;
 }
@@ -57,9 +57,16 @@ Equation Direction(const NodeBase& node, Eigen::VectorXd direction, RhsFunction 
         throw Exception(__PRETTY_FUNCTION__, "Dimension mismatch");
 
     direction.normalize();
-    Equation e(rhs);
+    int dependentComponent = -1;
+    direction.cwiseAbs().maxCoeff(&dependentComponent);
+    assert(dependentComponent > -1 && dependentComponent < direction.rows());
+
+    double invertedFactor = 1. / direction[dependentComponent];
+
+    Equation e(node, dependentComponent, [&](double time) { return rhs(time) * invertedFactor; });
     for (int iComponent = 0; iComponent < direction.rows(); ++iComponent)
-        e.AddTerm(Term(node, iComponent, direction[iComponent]));
+        if (iComponent != dependentComponent)
+            e.AddTerm(Term(node, iComponent, direction[iComponent] * invertedFactor));
 
     return e;
 }

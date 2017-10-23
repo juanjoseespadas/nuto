@@ -53,10 +53,6 @@ public:
     //! param rTolerance: tolerance
     void SetToleranceResidual(Node::eDof rDof, double rTolerance);
 
-    //! @brief Updates the Rhs for all constraints
-    //! @param rCurrentTime ... current time
-    //! @remark remove the second argument rDof
-    void UpdateConstraints(double rCurrentTime);
 
     //! @brief sets a scalar time dependent multiplication factor for the external loads
     //! @param rLoadRHSFactor ... first row time, second row scalar factor to calculate the external load (linear
@@ -194,10 +190,9 @@ protected:
     //! @return ret[0] are the DOF values, ret[1], ret[2] the 1st and 2nd time derivative, respectively
     std::array<StructureOutputBlockVector, 3> ExtractDofValues() const;
 
-    const BlockFullVector<double>& UpdateAndGetConstraintRHS(double rCurrentTime);
+    const BlockFullVector<double>& GetConstraintRhs(double rCurrentTime);
 
-    const BlockFullVector<double>& UpdateAndGetAndMergeConstraintRHS(double rCurrentTime,
-                                                                     StructureOutputBlockVector& rDof_dt0);
+    void MergeDofValues(const NuTo::StructureOutputBlockVector& rDof_dt0);
 
     StructureBase* mStructure; //!< structure belonging to the time integration scheme
 

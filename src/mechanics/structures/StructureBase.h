@@ -407,9 +407,11 @@ public:
     //! @brief calculate dependent dof values (for the zeroth time derivative)
     //! @param rActiveDofValues ... vector of independent dof values (ordering according to global dofs, size is number
     //! of active dofs)
+    //! @param constraintRHS ... rhs constraint vector
     //! @return  ... vector of dependent  dof values (ordering according to global dofs, size is number of active dofs)
     virtual NuTo::BlockFullVector<double>
-    NodeCalculateDependentDofValues(const NuTo::BlockFullVector<double>& rActiveDofValues) const = 0;
+    NodeCalculateDependentDofValues(const NuTo::BlockFullVector<double>& rActiveDofValues,
+                                    NuTo::BlockFullVector<double> constraintRHS) const = 0;
 
     //! @brief calculate the internal force vector for a node
     //! @param rId ... node id

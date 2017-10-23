@@ -5,26 +5,16 @@
 #include "math/SparseMatrixCSRVector2General.h"
 #include "mechanics/structures/StructureOutputBlockVector.h"
 #include "mechanics/dofSubMatrixStorage/BlockFullVector.h"
-
+#include "mechanics/constraints/Equation.h"
 NuTo::Assembler::Assembler()
     : mNodeVectorChanged(false)
     , mConstraintMatrix(mDofStatus, false)
-    , mConstraintMappingRhs(mDofStatus, false)
-    , mConstraintRhs(mDofStatus)
 {
 }
 
 void NuTo::Assembler::BuildGlobalDofs(const std::vector<NodeBase*>& rNodes)
 {
     std::map<Node::eDof, int> numDofsMap;
-
-    // build initial node numbering
-
-    //
-    // number Lagrange multipliers in constraint equations defined in StructureBase
-    // currently removed
-    // ConstraintNumberGlobalDofs(this->mNumDofs);
-    //
 
     for (auto node : rNodes)
     {
@@ -38,75 +28,33 @@ void NuTo::Assembler::BuildGlobalDofs(const std::vector<NodeBase*>& rNodes)
             }
         }
     }
-
-    mConstraintMatrix.AllocateSubmatrices();
-    mConstraintMappingRhs.AllocateSubmatrices();
-    mConstraintRhs.AllocateSubvectors();
-
     for (auto dof : mDofStatus.GetDofTypes())
     {
-        int numConstraints = GetConstraints().GetNumEquations(dof);
+        // Creates a vectors filled with 0,1,...,N
+        std::vector<int> mappingInitialToNewOrdering(numDofsMap[dof]);
+        std::iota(std::begin(mappingInitialToNewOrdering), std::end(mappingInitialToNewOrdering), 0);
+
+
+        int numConstraints = mConstraints.GetNumEquations(dof);
         mDofStatus.SetNumDependentDofs(dof, numConstraints);
         mDofStatus.SetNumActiveDofs(dof, numDofsMap[dof] - numConstraints);
-    }
+        int newDofNum = numDofsMap[dof] - numConstraints;
 
-    for (auto dof : mDofStatus.GetDofTypes())
-    {
-        auto& constraintMatrix = mConstraintMatrix(dof, dof);
-        constraintMatrix = GetConstraints().BuildConstraintMatrix(dof, mDofStatus.GetNumDofs(dof));
+        std::set<int> doubleConstraintCheck;
 
-        const int numActiveDofs = mDofStatus.GetNumActiveDofs(dof);
-        const int numDependentDofs = mDofStatus.GetNumDependentDofs(dof);
-        const int numDofs = numActiveDofs + numDependentDofs;
-
-        // init RhsMatrix as a diagonal identity matrix
-        auto& constraintMappingRhs = mConstraintMappingRhs(dof, dof);
-
-        constraintMappingRhs.Resize(numDependentDofs, numDependentDofs);
-        for (int i = 0; i < numDependentDofs; ++i)
-            constraintMappingRhs.AddValue(i, i, 1.);
-
-        // perform gauss algorithm
-        std::vector<int> mappingInitialToNewOrdering;
-        std::vector<int> mappingNewToInitialOrdering;
-
-        constraintMatrix.Gauss(constraintMappingRhs, mappingNewToInitialOrdering, mappingInitialToNewOrdering);
-
-        // move dependent dofs at the end
-        // Warning!!! after this loop mappingNewToInitialOrdering is no longer valid !!!
-        std::vector<int> tmpMapping;
-        for (int dependentDofCount = 0; dependentDofCount < numDependentDofs; dependentDofCount++)
+        for (int iConstraint = 0; iConstraint < numConstraints; ++iConstraint)
         {
-            tmpMapping.push_back(numActiveDofs + dependentDofCount);
-            mappingInitialToNewOrdering[mappingNewToInitialOrdering[dependentDofCount]] += numActiveDofs;
+            const Constraint::Equation& equation = mConstraints.GetEquation(dof, iConstraint);
+            int dependentDofNum = equation.GetDependentDof(dof);
+
+            // Check if dow was constrained twice
+            if (not doubleConstraintCheck.insert(dependentDofNum).second)
+                throw Exception(__PRETTY_FUNCTION__, "Dof cant be constrained twice!");
+
+            mappingInitialToNewOrdering[dependentDofNum] = mappingInitialToNewOrdering[newDofNum];
+            mappingInitialToNewOrdering[newDofNum] = dependentDofNum;
+            ++newDofNum;
         }
-        for (int activeDofCount = numDependentDofs; activeDofCount < numDofs; activeDofCount++)
-        {
-            tmpMapping.push_back(activeDofCount - numDependentDofs);
-            mappingInitialToNewOrdering[mappingNewToInitialOrdering[activeDofCount]] -= numDependentDofs;
-        }
-        mappingNewToInitialOrdering.clear();
-
-        // reorder columns
-        constraintMatrix.ReorderColumns(tmpMapping);
-
-
-        // remove columns of dependent dofs
-        // check if the submatrix which is removed is a diagonal matrix
-        const auto& columns = constraintMatrix.GetColumns();
-
-        for (unsigned int iRow = 0; iRow < columns.size(); iRow++)
-            for (unsigned int iPos = 0; iPos < columns[iRow].size(); iPos++)
-            {
-                int column = columns[iRow][iPos];
-                if (column > numActiveDofs)
-                    if (column - numActiveDofs != (int)iRow)
-                        throw Exception(__PRETTY_FUNCTION__, "invalid matrix structure.");
-            }
-
-
-        constraintMatrix.RemoveLastColumns(numDependentDofs);
-
         // renumber dofs
         for (auto node : rNodes)
         {
@@ -117,6 +65,82 @@ void NuTo::Assembler::BuildGlobalDofs(const std::vector<NodeBase*>& rNodes)
                 node->SetDofNumber(dof, i, newDofNumber);
             }
         }
+    }
+
+
+    mConstraintMatrix.AllocateSubmatrices();
+    //    mConstraintMappingRhs.AllocateSubmatrices();
+    //    mConstraintRhs.AllocateSubvectors();
+
+
+    for (auto dof : mDofStatus.GetDofTypes())
+    {
+        auto& constraintMatrix = mConstraintMatrix(dof, dof);
+        constraintMatrix = GetConstraints().BuildConstraintMatrix(dof, mDofStatus.GetNumActiveDofs(dof));
+
+        //        const int numActiveDofs = mDofStatus.GetNumActiveDofs(dof);
+        //        const int numDependentDofs = mDofStatus.GetNumDependentDofs(dof);
+        //        const int numDofs = numActiveDofs + numDependentDofs;
+
+        //        // init RhsMatrix as a diagonal identity matrix
+        //        auto& constraintMappingRhs = mConstraintMappingRhs(dof, dof);
+
+        //        constraintMappingRhs.Resize(numDependentDofs, numDependentDofs);
+        //        for (int i = 0; i < numDependentDofs; ++i)
+        //            constraintMappingRhs.AddValue(i, i, 1.);
+
+        //        // perform gauss algorithm
+        //        std::vector<int> mappingInitialToNewOrdering;
+        //        std::vector<int> mappingNewToInitialOrdering;
+
+        //        constraintMatrix.Gauss(constraintMappingRhs, mappingNewToInitialOrdering,
+        //        mappingInitialToNewOrdering);
+
+        //        // move dependent dofs at the end
+        //        // Warning!!! after this loop mappingNewToInitialOrdering is no longer valid !!!
+        //        std::vector<int> tmpMapping;
+        //        for (int dependentDofCount = 0; dependentDofCount < numDependentDofs; dependentDofCount++)
+        //        {
+        //            tmpMapping.push_back(numActiveDofs + dependentDofCount);
+        //            mappingInitialToNewOrdering[mappingNewToInitialOrdering[dependentDofCount]] += numActiveDofs;
+        //        }
+        //        for (int activeDofCount = numDependentDofs; activeDofCount < numDofs; activeDofCount++)
+        //        {
+        //            tmpMapping.push_back(activeDofCount - numDependentDofs);
+        //            mappingInitialToNewOrdering[mappingNewToInitialOrdering[activeDofCount]] -= numDependentDofs;
+        //        }
+        //        mappingNewToInitialOrdering.clear();
+
+        //        // reorder columns
+        //        constraintMatrix.ReorderColumns(tmpMapping);
+
+
+        //        // remove columns of dependent dofs
+        //        // check if the submatrix which is removed is a diagonal matrix
+        //        const auto& columns = constraintMatrix.GetColumns();
+
+        //        for (unsigned int iRow = 0; iRow < columns.size(); iRow++)
+        //            for (unsigned int iPos = 0; iPos < columns[iRow].size(); iPos++)
+        //            {
+        //                int column = columns[iRow][iPos];
+        //                if (column > numActiveDofs)
+        //                    if (column - numActiveDofs != (int)iRow)
+        //                        throw Exception(__PRETTY_FUNCTION__, "invalid matrix structure.");
+        //            }
+
+
+        constraintMatrix.RemoveLastColumns(numDependentDofs);
+
+        //        // renumber dofs
+        //        for (auto node : rNodes)
+        //        {
+        //            for (int i = 0; i < node->GetNum(dof); ++i)
+        //            {
+        //                int initialDofNumber = node->GetDof(dof, i);
+        //                int newDofNumber = mappingInitialToNewOrdering[initialDofNumber];
+        //                node->SetDofNumber(dof, i, newDofNumber);
+        //            }
+        //        }
     }
 
     // since only the diagonals were set, the off-diagonal submatrices have to be resized
@@ -139,27 +163,27 @@ void NuTo::Assembler::BuildGlobalDofs(const std::vector<NodeBase*>& rNodes)
     ConstraintUpdateRhs(0);
 }
 
-NuTo::BlockFullVector<double> NuTo::Assembler::BuildRhsBeforeGaussElimination(double time) const
-{
-    ThrowIfRenumberingRequred();
+// NuTo::BlockFullVector<double> NuTo::Assembler::BuildRhsBeforeGaussElimination(double time) const
+//{
+//    ThrowIfRenumberingRequred();
 
-    NuTo::BlockFullVector<double> rhsBeforeGaussElimination(mDofStatus);
+//    NuTo::BlockFullVector<double> rhsBeforeGaussElimination(mDofStatus);
 
-    for (auto dof : mDofStatus.GetDofTypes())
-        rhsBeforeGaussElimination[dof] = GetConstraints().GetRhs(dof, time);
+//    for (auto dof : mDofStatus.GetDofTypes())
+//        rhsBeforeGaussElimination[dof] = GetConstraints().GetRhs(dof, time);
 
-    return rhsBeforeGaussElimination;
-}
+//    return rhsBeforeGaussElimination;
+//}
 
-void NuTo::Assembler::ConstraintUpdateRhs(double time)
-{
-    ThrowIfRenumberingRequred();
+// void NuTo::Assembler::ConstraintUpdateRhs(double time)
+//{
+//    ThrowIfRenumberingRequred();
 
-    BlockFullVector<double> rhsBeforeGaussElimination = BuildRhsBeforeGaussElimination(time);
+//    BlockFullVector<double> rhsBeforeGaussElimination = BuildRhsBeforeGaussElimination(time);
 
-    // calculate the rhs vector of the constraint equations after the Gauss elimination using the mapping matrix
-    mConstraintRhs = mConstraintMappingRhs * rhsBeforeGaussElimination;
-}
+//    // calculate the rhs vector of the constraint equations after the Gauss elimination using the mapping matrix
+//    mConstraintRhs = mConstraintMappingRhs * rhsBeforeGaussElimination;
+//}
 
 void NuTo::Assembler::ThrowIfRenumberingRequred() const
 {

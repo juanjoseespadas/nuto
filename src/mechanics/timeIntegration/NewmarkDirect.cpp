@@ -54,9 +54,15 @@ void NewmarkDirect::Solve(double timeFinal)
             mStructure->DofTypeSetIsActive(dof, true);
         }
 
-        const auto bRHS = UpdateAndGetAndMergeConstraintRHS(mTimeControl.GetPreviousTime(), dofValues[0]);
+        const auto bRHS = GetConstraintRhs(mTimeControl.GetPreviousTime());
         const auto prevExtForce = CalculateCurrentExternalLoad(mTimeControl.GetPreviousTime());
-        const auto deltaBRHS = UpdateAndGetConstraintRHS(mTimeControl.GetCurrentTime()) - bRHS;
+
+        //        MergeDofValues(dofValues[0], bRHS);
+
+        dofValues[0].K = mStructure->NodeCalculateDependentDofValues(dofValues[0].J, bRHS);
+        MergeDofValues(dofValues[0]);
+
+        const auto deltaBRHS = GetConstraintRhs(mTimeControl.GetCurrentTime()) - bRHS;
 
         IterateForActiveDofValues(prevExtForce, deltaBRHS, dofValues);
     }
@@ -291,7 +297,11 @@ std::array<StructureOutputBlockVector, 3> NuTo::NewmarkDirect::InitialState()
 
     auto dofValues = ExtractDofValues();
 
-    UpdateAndGetAndMergeConstraintRHS(mTimeControl.GetCurrentTime(), dofValues[0]);
+
+    dofValues[0].K = mStructure->NodeCalculateDependentDofValues(dofValues[0].J,
+                                                                 GetConstraintRhs(mTimeControl.GetCurrentTime()));
+    MergeDofValues(dofValues[0]);
+
 
     const auto gradientAndHessians = EvaluateGradientAndHessians();
     const auto intForce = gradientAndHessians.first;

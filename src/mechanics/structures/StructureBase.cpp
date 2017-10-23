@@ -241,7 +241,7 @@ void NuTo::StructureBase::ElementGroupExportVtkDataFile(int rGroupIdent, const s
 std::vector<int> StructureBase::GetVisualizationGroups()
 {
     std::vector<int> vec;
-    for(const auto& entry : mGroupVisualizeComponentsMap)
+    for (const auto& entry : mGroupVisualizeComponentsMap)
         vec.push_back(entry.first);
     return vec;
 }
@@ -568,7 +568,7 @@ void NuTo::StructureBase::SolveGlobalSystemStaticElastic()
 
     StructureOutputBlockVector deltaDof_dt0(GetDofStatus(), true);
     deltaDof_dt0.J.SetZero();
-    deltaDof_dt0.K = GetAssembler().GetConstraintRhs();
+    deltaDof_dt0.K = GetAssembler().GetConstraintRhs(0.);
 
     auto hessian0 = BuildGlobalHessian0();
 
@@ -580,12 +580,11 @@ void NuTo::StructureBase::SolveGlobalSystemStaticElastic()
     // reuse deltaDof_dt0
     deltaDof_dt0.J = SolveBlockSystem(hessian0.JJ, residual.J);
 
-    deltaDof_dt0.K = NodeCalculateDependentDofValues(deltaDof_dt0.J);
+    deltaDof_dt0.K = NodeCalculateDependentDofValues(deltaDof_dt0.J, deltaDof_dt0.K);
     NodeMergeDofValues(0, deltaDof_dt0);
 }
 
-void NuTo::StructureBase::ConstraintLinearEquationNodeToElementCreate(int rNode, int rElementGroup,
-                                                                      NuTo::Node::eDof,
+void NuTo::StructureBase::ConstraintLinearEquationNodeToElementCreate(int rNode, int rElementGroup, NuTo::Node::eDof,
                                                                       const double rTolerance,
                                                                       Eigen::Vector3d rNodeCoordOffset)
 {
@@ -661,10 +660,12 @@ void NuTo::StructureBase::ConstraintLinearEquationNodeToElementCreate(int rNode,
     auto shapeFunctions =
             elementPtr->GetInterpolationType().Get(Node::eDof::DISPLACEMENTS).ShapeFunctions(elementNaturalNodeCoords);
 
-    std::vector<Constraint::Equation> equations(dim); // default construction of Equation with rhs = Constant = 0
+    std::vector<Constraint::Equation> equations; // default construction of Equation with rhs = Constant = 0
+    equations.reserve(dim);
     for (int iDim = 0; iDim < dim; ++iDim)
     {
-        equations[iDim].AddTerm(Constraint::Term(*NodeGetNodePtr(rNode), iDim, 1.));
+        //        equations[iDim].AddTerm(Constraint::Term(*NodeGetNodePtr(rNode), iDim, 1.));
+        equations[iDim] = Constraint::Equation(*NodeGetNodePtr(rNode), iDim);
     }
 
 

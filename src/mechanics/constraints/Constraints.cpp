@@ -5,6 +5,11 @@
 
 using namespace NuTo;
 
+const Equations& Constraint::Constraints::GetEquation(Node::eDof dof, int equationNumber)
+{
+    return mEquations[dof][equationNumber];
+}
+
 void Constraint::Constraints::Add(Node::eDof dof, Equation equation)
 {
     mEquations[dof].push_back(equation);
@@ -79,6 +84,14 @@ SparseMatrixCSRVector2General<double> Constraint::Constraints::BuildConstraintMa
 
             double coefficient = term.GetCoefficient();
             int globalDofNumber = term.GetNode().GetDof(dof, term.GetComponent());
+            if (globalDofNumber >= nDofs)
+            {
+                std::ostringstream message;
+                message << "Component " << term.GetComponent() << " from node " << term.GetNode()
+                        << " is a dependent dof. Additional terms of constraint equations may only include "
+                           "unconstrained dofs. CHECK YOUR CONSTRAINT EQUATIONS!";
+                throw Exception(__PRETTY_FUNCTION__, )
+            }
             if (std::abs(coefficient) > 1.e-18)
                 matrix.AddValue(iEquation, globalDofNumber, coefficient);
         }
