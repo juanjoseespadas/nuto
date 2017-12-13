@@ -32,6 +32,7 @@ foreach(test
     PGDPlateMeso2D
     SparseDirectSolverMUMPS
     Temperature1D
+    TestImplicitMethods
     Truss1D2N
     )
 
