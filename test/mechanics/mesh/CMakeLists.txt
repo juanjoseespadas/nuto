@@ -1,9 +1,11 @@
 add_unit_test(MeshFem
     mechanics/mesh/MeshFemDofConvert
+    mechanics/interpolation/InterpolationTriangleLinear.cpp
     mechanics/elements/ElementShapeFunctions)
 
 add_unit_test(UnitMeshFem
     mechanics/mesh/MeshFem
+    mechanics/interpolation/InterpolationTriangleLinear.cpp
     mechanics/elements/ElementShapeFunctions)
 
 foreach(inputFile
@@ -27,4 +29,5 @@ endforeach()
 add_unit_test(MeshGmsh
     mechanics/mesh/MeshFem
     math/Legendre
+    mechanics/interpolation/InterpolationTriangleLinear.cpp
     mechanics/elements/ElementShapeFunctions)

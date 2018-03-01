@@ -1,6 +1,7 @@
 #include "BoostUnitTest.h"
 #include "mechanics/cell/Jacobian.h"
 #include "mechanics/elements/ElementShapeFunctions.h"
+#include "mechanics/interpolation/InterpolationTriangleLinear.h"
 
 BOOST_AUTO_TEST_CASE(Jacobian1DDet)
 {
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(Jacobian1Din2D)
 //! @brief calculates the area of the triangle (a,b,c) via the jacobian to a reference unit triangle
 double TriangleAreaViaJacobian(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c)
 {
-    Eigen::MatrixXd B = NuTo::ShapeFunctions2D::DerivativeShapeFunctionsTriangleOrder1(Eigen::Vector2d::Zero());
+    Eigen::MatrixXd B = NuTo::InterpolationTriangleLinear().GetDerivativeShapeFunctions(Eigen::Vector2d::Zero());
     Eigen::VectorXd coordinates = Eigen::VectorXd(9);
     coordinates << a.x(), a.y(), a.z(), b.x(), b.y(), b.z(), c.x(), c.y(), c.z();
 
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Jacobian2Din3DComputeNormal)
     Eigen::Vector3d p2(0., 1., 0.);
     Eigen::Vector3d p3(0., 0., 1.);
 
-    Eigen::MatrixXd B = NuTo::ShapeFunctions2D::DerivativeShapeFunctionsTriangleOrder1(Eigen::Vector2d::Zero());
+    Eigen::MatrixXd B = NuTo::InterpolationTriangleLinear().GetDerivativeShapeFunctions(Eigen::Vector2d::Zero());
     Eigen::VectorXd coordinates = Eigen::VectorXd(9);
     coordinates << p1, p2, p3;
 

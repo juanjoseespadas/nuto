@@ -3,6 +3,7 @@ add_unit_test(Cell
     mechanics/elements/ElementShapeFunctions.cpp)
 
 add_unit_test(Jacobian
+    mechanics/interpolation/InterpolationTriangleLinear.cpp
     mechanics/elements/ElementShapeFunctions.cpp)
 
 add_unit_test(CellData)
