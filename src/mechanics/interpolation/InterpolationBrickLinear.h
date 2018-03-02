@@ -12,7 +12,7 @@ public:
         return std::make_unique<InterpolationBrickLinear>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions3D::ShapeFunctionsBrickOrder1(naturalIpCoords);
     }

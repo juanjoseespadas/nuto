@@ -12,7 +12,7 @@ public:
         return std::make_unique<InterpolationQuadSerendipity>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions2D::ShapeFunctionsQuadOrder2(naturalIpCoords);
     }

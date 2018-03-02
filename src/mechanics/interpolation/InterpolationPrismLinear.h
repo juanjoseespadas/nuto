@@ -12,7 +12,7 @@ public:
         return std::make_unique<InterpolationPrismLinear>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions3D::ShapeFunctionsPrismOrder1(naturalIpCoords);
     }

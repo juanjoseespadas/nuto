@@ -13,7 +13,7 @@ public:
         return std::make_unique<InterpolationTetrahedronLinear>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions3D::ShapeFunctionsTetrahedronOrder1(naturalIpCoords);
     }

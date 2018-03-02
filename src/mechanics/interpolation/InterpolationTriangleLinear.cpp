@@ -8,7 +8,7 @@ std::unique_ptr<InterpolationSimple> InterpolationTriangleLinear::Clone() const
     return std::make_unique<InterpolationTriangleLinear>(*this);
 }
 
-ShapeFunctions InterpolationTriangleLinear::GetShapeFunctions(const NaturalCoords& naturalIpCoords) const
+Eigen::VectorXd InterpolationTriangleLinear::GetShapeFunctions(const NaturalCoords& naturalIpCoords) const
 {
     Eigen::Matrix<double, 3, 1> shapeFunctions;
     shapeFunctions[0] = 1. - naturalIpCoords(0) - naturalIpCoords(1);
@@ -17,7 +17,7 @@ ShapeFunctions InterpolationTriangleLinear::GetShapeFunctions(const NaturalCoord
     return shapeFunctions;
 }
 
-DerivativeShapeFunctionsNatural InterpolationTriangleLinear::GetDerivativeShapeFunctions(const NaturalCoords&) const
+Eigen::Matrix<double, 3, 2> InterpolationTriangleLinear::DerivativeShapeFunctions()
 {
     Eigen::Matrix<double, 3, 2> derivativeShapeFunctions;
     derivativeShapeFunctions(0, 0) = -1.0;
@@ -31,7 +31,12 @@ DerivativeShapeFunctionsNatural InterpolationTriangleLinear::GetDerivativeShapeF
     return derivativeShapeFunctions;
 }
 
-NaturalCoords InterpolationTriangleLinear::GetLocalCoords(int nodeId) const
+DerivativeShapeFunctionsNatural InterpolationTriangleLinear::GetDerivativeShapeFunctions(const NaturalCoords&) const
+{
+    return DerivativeShapeFunctions();
+}
+
+Eigen::Vector2d InterpolationTriangleLinear::LocalCoords(int nodeId)
 {
     switch (nodeId)
     {
@@ -44,6 +49,11 @@ NaturalCoords InterpolationTriangleLinear::GetLocalCoords(int nodeId) const
     default:
         throw Exception(__PRETTY_FUNCTION__, "node index out of range (0..2)");
     }
+}
+
+NaturalCoords InterpolationTriangleLinear::GetLocalCoords(int nodeId) const
+{
+    return LocalCoords(nodeId);
 }
 
 int InterpolationTriangleLinear::GetNumNodes() const

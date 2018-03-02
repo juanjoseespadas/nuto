@@ -13,7 +13,7 @@ public:
         return std::make_unique<InterpolationTriangleQuadratic>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions2D::ShapeFunctionsTriangleOrder2(naturalIpCoords);
     }

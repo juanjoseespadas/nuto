@@ -42,7 +42,7 @@ public:
         return Matrix::N(Interpolation().GetShapeFunctions(ipCoords), Interpolation().GetNumNodes(), GetDofDimension());
     }
 
-    ShapeFunctions GetShapeFunctions(NaturalCoords ipCoords) const override
+    Eigen::VectorXd GetShapeFunctions(NaturalCoords ipCoords) const override
     {
         return Interpolation().GetShapeFunctions(ipCoords);
     }

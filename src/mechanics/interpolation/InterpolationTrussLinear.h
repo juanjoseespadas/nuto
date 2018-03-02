@@ -13,7 +13,7 @@ public:
         return std::make_unique<InterpolationTrussLinear>(*this);
     }
 
-    ShapeFunctions GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
+    Eigen::VectorXd GetShapeFunctions(const NaturalCoords& naturalIpCoords) const override
     {
         return ShapeFunctions1D::ShapeFunctionsTrussOrder1(naturalIpCoords);
     }
